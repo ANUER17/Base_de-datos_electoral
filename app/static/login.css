@@ -1,0 +1,65 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    font-family: 'Arial', sans-serif;
+    background-color: #2d2d2d; /* Fondo oscuro */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.login-container {
+    background-color: #1a1a1a; /* Fondo oscuro del formulario */
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    width: 320px;
+    text-align: center;
+}
+
+.input-container {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.input-container .icon {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    transform: translateY(-50%);
+    color: #7a7a7a; /* Color de los iconos */
+}
+
+.input-container input {
+    width: 100%;
+    padding: 12px 12px 12px 36px; /* Espaciado para el icono */
+    background-color: #2d2d2d; /* Fondo de los campos de entrada */
+    border: none;
+    border-radius: 4px;
+    color: #ffffff; /* Color del texto */
+    font-size: 16px;
+}
+
+.input-container input:focus {
+    outline: none;
+    border: 1px solid #00bfa6; /* Color de borde al enfocar */
+}
+
+.login-button {
+    width: 100%;
+    padding: 12px;
+    background-color: #00bfa6; /* Color del botón */
+    border: none;
+    border-radius: 4px;
+    color: #ffffff; /* Color del texto */
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: background-color 0.3s;
+}
+
+.login-button:hover {
+    background-color: #009e8a; /* Cambio de color al pasar el ratón */
+}

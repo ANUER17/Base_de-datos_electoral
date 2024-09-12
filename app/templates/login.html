@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Iniciar Sesión{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <form class="login-form" method="post" action="{{ url_for('main.login') }}">
+        <h2>Inicio de Sesión</h2>
+        <div class="input-container">
+            <i class="fas fa-user icon"></i>
+            <input type="text" id="username" name="username" placeholder="Usuario" required>
+        </div>
+        <div class="input-container">
+            <i class="fas fa-lock icon"></i>
+            <input type="password" id="password" name="password" placeholder="Contraseña" required>
+        </div>
+        <button type="submit" class="login-button">Ingresar</button>
+    </form>
+</div>
+{% endblock %}

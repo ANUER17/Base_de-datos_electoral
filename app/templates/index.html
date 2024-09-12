@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+
+{% block title %}Panel Principal{% endblock %}
+
+{% block content %}
+<h2>Panel Principal</h2>
+
+<!-- Enlaces a funcionalidades principales -->
+<a href="{{ url_for('main.registro') }}">Nuevo Registro</a>
+<button onclick="abrirModal('modalBuscar')">Buscar Registros</button>
+
+<!-- Botones para las acciones con ventanas modales -->
+<button onclick="abrirModal('modalModificar')">Modificar Registros</button>
+<button onclick="abrirModal('modalEliminar')">Eliminar Registros</button>
+
+<!-- Botón para exportar registros -->
+<form method="post" action="{{ url_for('main.exportar') }}" class="export-form" id="export-form">
+    <input type="password" name="clave" placeholder="Clave para exportar" required>
+    <button type="submit">Exportar Registros</button>
+</form>
+
+<!-- Botón para ver estadísticas de votación -->
+<form method="post" action="{{ url_for('main.estadisticas') }}" class="export-form" id="estadisticas-form">
+    <input type="password" name="clave" placeholder="Clave para ver estadísticas" required>
+    <button type="submit">Ver Estadísticas</button>
+</form>
+
+<!-- Botón para cerrar sesión con confirmación -->
+<button onclick="confirmarSalir()">Salir</button>
+
+<!-- Modal para Buscar Registros -->
+<div id="modalBuscar" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="cerrarModal('modalBuscar')">&times;</span>
+    <h2>Buscar Registro</h2>
+    <form method="post" action="{{ url_for('main.cargar_busqueda') }}">
+      <label for="cedula">Número de Cédula:</label>
+      <input type="text" id="cedula" name="cedula" required>
+      <button type="submit">Buscar</button>
+    </form>
+  </div>
+</div>
+
+<!-- Modal para mostrar resultados de búsqueda -->
+{% if action == 'buscar' and registro %}
+<div id="buscarRegistroModal" class="modal" style="display: block;">
+  <div class="modal-content">
+    <span class="close" onclick="cerrarModal('buscarRegistroModal')">&times;</span>
+    <h2>Resultado de Búsqueda</h2>
+    <!-- Mostrar los detalles del registro encontrado -->
+    <p><strong>Número de Cédula:</strong> {{ registro.cedula }}</p>
+    <p><strong>Nombres:</strong> {{ registro.nombres }}</p>
+    <p><strong>Apellidos:</strong> {{ registro.apellidos }}</p>
+    <p><strong>Dirección:</strong> {{ registro.direccion }}</p>
+    <p><strong>Número de Contacto:</strong> {{ registro.numero_contacto }}</p>
+    <p><strong>Lugar de Votación:</strong> {{ registro.lugar_votacion }}</p>
+    <p><strong>Mesa de Votación:</strong> {{ registro.mesa_votacion }}</p>
+    <p><strong>Tipo de Transporte:</strong> {{ registro.tipo_transporte }}</p>
+    <p><strong>Otro Transporte:</strong> {{ registro.otro_transporte }}</p>
+    <p><strong>Responsable:</strong> {{ registro.responsable }}</p>
+    <p><strong>Código Responsable:</strong> {{ registro.codigo_responsable }}</p>
+  </div>
+</div>
+{% endif %}
+
+<!-- Modal para Modificar Registros -->
+<div id="modalModificar" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="cerrarModal('modalModificar')">&times;</span>
+    <h2>Modificar Registro</h2>
+    <form method="post" action="{{ url_for('main.cargar_modificacion') }}">
+      <label for="cedula">Número de Cédula:</label>
+      <input type="text" id="cedula" name="cedula" required>
+      <button type="submit">Cargar Datos</button>
+    </form>
+  </div>
+</div>
+
+<!-- Modal para editar el registro una vez cargado -->
+{% if action == 'modificar' and registro %}
+<div id="editarRegistroModal" class="modal" style="display: block;">
+  <div class="modal-content">
+    <span class="close" onclick="cerrarModal('editarRegistroModal')">&times;</span>
+    <h2>Editar Registro</h2>
+    <form method="post" action="{{ url_for('main.guardar_modificacion') }}">
+        <!-- Campos para editar el registro -->
+        <label for="cedula">Número de Cédula:</label>
+        <input type="text" id="cedula" name="cedula" value="{{ registro.cedula }}" readonly>
+
+        <label for="nombres">Nombres:</label>
+        <input type="text" id="nombres" name="nombres" value="{{ registro.nombres }}" required>
+
+        <label for="apellidos">Apellidos:</label>
+        <input type="text" id="apellidos" name="apellidos" value="{{ registro.apellidos }}" required>
+
+        <label for="direccion">Dirección:</label>
+        <input type="text" id="direccion" name="direccion" value="{{ registro.direccion }}" required>
+
+        <label for="numero_contacto">Número de Contacto:</label>
+        <input type="text" id="numero_contacto" name="numero_contacto" value="{{ registro.numero_contacto }}" required>
+
+        <label for="lugar_votacion">Lugar de Votación:</label>
+        <select id="lugar_votacion" name="lugar_votacion" onchange="actualizarMesasModificacion()" required>
+            {% for lugar in ['Cabecera Municipal', 'Micoahumado', 'Bodega Central', 'El Dique', 'La Palma', 'Boca de La Honda', 'Las Pailas', 'La Esmeralda', 'Corcovado', 'Paredes de Ororia', 'Mina Gallo'] %}
+            <option value="{{ lugar }}" {% if registro.lugar_votacion == lugar %}selected{% endif %}>{{ lugar }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="mesa_votacion">Mesa de Votación:</label>
+        <select id="mesa_votacion" name="mesa_votacion" required>
+            <!-- Opciones de mesa se generarán dinámicamente -->
+        </select>
+
+        <label for="tipo_transporte">Tipo de Transporte:</label>
+        <select id="tipo_transporte" name="tipo_transporte" onchange="mostrarOtroTransporte()" required>
+            {% for transporte in ['Bicicleta', 'Moto particular', 'Moto taxi', 'Carro moto', 'Carro', 'Camión', 'Buseta', 'Ninguno', 'Otros'] %}
+            <option value="{{ transporte }}" {% if registro.tipo_transporte == transporte %}selected{% endif %}>{{ transporte }}</option>
+            {% endfor %}
+        </select>
+
+        <!-- Campo adicional para "Otros" tipo de transporte -->
+        <div id="otro_transporte" style="{% if registro.tipo_transporte != 'Otros' %}display: none;{% endif %}">
+            <label for="otro_transporte_input">Especifique el tipo de transporte:</label>
+            <input type="text" id="otro_transporte_input" name="otro_transporte_input" value="{{ registro.otro_transporte }}">
+        </div>
+
+        <!-- Opciones para Responsable -->
+<label for="responsable">Responsable:</label>
+<select id="responsable" name="responsable" onchange="mostrarOpcionesResponsable()" required 
+        {% if registro.responsable == 'NO' %}disabled{% endif %}>
+    <option value="SI" {% if registro.responsable == 'SI' %}selected{% endif %}>Sí</option>
+    <option value="NO" {% if registro.responsable == 'NO' %}selected{% endif %}>No</option>
+</select>
+
+        <!-- Campos condicionales para Responsable -->
+        <div id="codigo_responsable_div" style="{% if registro.responsable != 'SI' %}display: none;{% endif %}">
+            <label for="codigo_responsable">Ingrese el código del responsable (numérico):</label>
+            <input type="number" id="codigo_responsable" name="codigo_responsable" value="{{ registro.codigo_responsable }}">
+        </div>
+
+        <div id="seleccionar_codigo_div" style="{% if registro.responsable != 'NO' %}display: none;{% endif %}">
+            <label for="seleccionar_codigo">Seleccione el código del responsable:</label>
+            <select id="seleccionar_codigo" name="seleccionar_codigo">
+                {% for codigo in codigos_responsables %}
+                <option value="{{ codigo }}" {% if registro.codigo_responsable == codigo %}selected{% endif %}>Responsable {{ codigo }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Botón que envía el formulario -->
+        <button type="submit">Guardar Cambios</button>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+<!-- Modal para Eliminar Registros -->
+<div id="modalEliminar" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="cerrarModal('modalEliminar')">&times;</span>
+    <h2>Eliminar Registro</h2>
+    <form method="post" action="{{ url_for('main.cargar_eliminar') }}">
+      <label for="cedula">Número de Cédula:</label>
+      <input type="text" id="cedula" name="cedula" required>
+      <button type="submit">Cargar Datos</button>
+    </form>
+  </div>
+</div>
+
+<!-- Modal para confirmar eliminación -->
+{% if action == 'eliminar' and registro %}
+<div id="eliminarRegistroModal" class="modal" style="display: block;">
+  <div class="modal-content">
+    <span class="close" onclick="cerrarModal('eliminarRegistroModal')">&times;</span>
+    <h2>Eliminar Registro</h2>
+    <p>¿Está seguro de eliminar el registro de {{ registro.nombres }} {{ registro.apellidos }} con cédula {{ registro.cedula }}?</p>
+    <form method="post" action="{{ url_for('main.eliminar') }}">
+        <input type="hidden" name="cedula" value="{{ registro.cedula }}">
+        <input type="hidden" name="confirmar" value="true">
+        <button type="submit">Sí, eliminar registro</button>
+        <button type="button" onclick="cerrarModal('eliminarRegistroModal')">Cancelar</button>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+<script>
+    // Funciones JavaScript para los modales y acciones
+    function abrirModal(modalId) {
+        document.getElementById(modalId).style.display = 'block';
+    }
+    
+    function cerrarModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+    
+    function confirmarModificacion() {
+        abrirModal('confirmarModal');
+    }
+    
+    function actualizarMesasModificacion() {
+        const lugarVotacion = document.getElementById('lugar_votacion').value;
+        const mesaVotacion = document.getElementById('mesa_votacion');
+        mesaVotacion.innerHTML = ''; // Reiniciar opciones
+    
+        let maxMesa = 1;
+        switch (lugarVotacion) {
+            case 'Cabecera Municipal':
+                maxMesa = 21;
+                break;
+            case 'Micoahumado':
+                maxMesa = 4;
+                break;
+            case 'Bodega Central':
+            case 'El Dique':
+                maxMesa = 3;
+                break;
+            case 'La Palma':
+            case 'Boca de La Honda':
+            case 'Las Pailas':
+            case 'Corcovado':
+                maxMesa = 2;
+                break;
+            case 'La Esmeralda':
+            case 'Paredes de Ororia':
+            case 'Mina Gallo':
+                maxMesa = 1;
+                break;
+            default:
+                maxMesa = 1;
+        }
+    
+        for (let i = 1; i <= maxMesa; i++) {
+            const option = document.createElement('option');
+            option.value = `Mesa ${i}`;
+            option.textContent = `Mesa ${i}`;
+            
+            // Verificar si 'registro' está definido antes de acceder a su valor
+            {% if registro %}
+            if (option.value === '{{ registro.mesa_votacion }}') {  // Selecciona la mesa actual del registro
+                option.selected = true;
+            }
+            {% endif %}
+            
+            mesaVotacion.appendChild(option);
+        }
+    }
+    
+    function mostrarOtroTransporte() {
+        const tipoTransporte = document.getElementById('tipo_transporte').value;
+        const otroTransporteDiv = document.getElementById('otro_transporte');
+        
+        if (tipoTransporte === 'Otros') {
+            otroTransporteDiv.style.display = 'block';
+        } else {
+            otroTransporteDiv.style.display = 'none';
+        }
+    }
+    
+    function mostrarOpcionesResponsable() {
+    const responsable = document.getElementById('responsable').value;
+    const codigoResponsableDiv = document.getElementById('codigo_responsable_div');
+    const seleccionarCodigoDiv = document.getElementById('seleccionar_codigo_div');
+
+    if (responsable === 'SI') {
+        codigoResponsableDiv.style.display = 'block';
+        seleccionarCodigoDiv.style.display = 'none';
+    } else if (responsable === 'NO') {
+        codigoResponsableDiv.style.display = 'none';
+        seleccionarCodigoDiv.style.display = 'block';
+    } else {
+        codigoResponsableDiv.style.display = 'none';
+        seleccionarCodigoDiv.style.display = 'none';
+    }
+}
+    
+    window.onclick = function(event) {
+        const modals = document.getElementsByClassName('modal');
+        for (let i = 0; i < modals.length; i++) {
+            if (event.target == modals[i]) {
+                modals[i].style.display = 'none';
+            }
+        }
+    }
+    
+    // Inicializar opciones de mesa al cargar los datos del registro
+    document.addEventListener('DOMContentLoaded', function() {
+        if (document.getElementById('lugar_votacion')) {
+            actualizarMesasModificacion();
+        }
+    });
+</script>    
+{% endblock %}

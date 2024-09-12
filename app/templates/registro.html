@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Nuevo Registro{% endblock %}
+
+{% block content %}
+<h2>Nuevo Registro</h2>
+
+<form method="post">
+    <!-- Campo de registro para Número de Cédula -->
+    <label for="cedula">Número de Cédula:</label>
+    <input type="number" id="cedula" name="cedula" required>
+    
+    <!-- Campo de registro para Nombres -->
+    <label for="nombres">Nombres:</label>
+    <input type="text" id="nombres" name="nombres" required>
+    
+    <!-- Campo de registro para Apellidos -->
+    <label for="apellidos">Apellidos:</label>
+    <input type="text" id="apellidos" name="apellidos" required>
+    
+    <!-- Campo de registro para Dirección -->
+    <label for="direccion">Dirección:</label>
+    <input type="text" id="direccion" name="direccion" required>
+    
+    <!-- Campo de registro para Número de Contacto -->
+    <label for="numero_contacto">Número de Contacto:</label>
+    <input type="number" id="numero_contacto" name="numero_contacto" required>
+    
+    <!-- Lista desplegable para Lugar de Votación -->
+    <label for="lugar_votacion">Lugar de Votación:</label>
+    <select id="lugar_votacion" name="lugar_votacion" onchange="actualizarMesas()" required>
+        <option value="">Seleccione un lugar de votación</option>
+        <option value="Cabecera Municipal">Cabecera Municipal</option>
+        <option value="Micoahumado">Micoahumado</option>
+        <option value="Bodega Central">Bodega Central</option>
+        <option value="El Dique">El Dique</option>
+        <option value="La Palma">La Palma</option>
+        <option value="Boca de La Honda">Boca de La Honda</option>
+        <option value="Las Pailas">Las Pailas</option>
+        <option value="La Esmeralda">La Esmeralda</option>
+        <option value="Corcovado">Corcovado</option>
+        <option value="Paredes de Ororia">Paredes de Ororia</option>
+        <option value="Mina Gallo">Mina Gallo</option>
+    </select>
+    
+    <!-- Lista desplegable para Mesa de Votación -->
+    <label for="mesa_votacion">Mesa de Votación:</label>
+    <select id="mesa_votacion" name="mesa_votacion" required>
+        <option value="">Seleccione una mesa</option>
+        <!-- Las opciones se actualizarán dinámicamente con JavaScript -->
+    </select>
+    
+    <!-- Lista desplegable para Tipo de Transporte -->
+    <label for="tipo_transporte">Tipo de Transporte:</label>
+    <select id="tipo_transporte" name="tipo_transporte" onchange="mostrarOtroTransporte()" required>
+        <option value="">Seleccione un tipo de transporte</option>
+        <option value="Bicicleta">Bicicleta</option>
+        <option value="Moto particular">Moto particular</option>
+        <option value="Moto taxi">Moto taxi</option>
+        <option value="Carro moto">Carro moto</option>
+        <option value="Carro">Carro</option>
+        <option value="Camión">Camión</option>
+        <option value="Buseta">Buseta</option>
+        <option value="Ninguno">Ninguno</option>
+        <option value="Otros">Otros</option>
+    </select>
+    
+    <!-- Campo adicional para especificar otro tipo de transporte -->
+    <div id="otro_transporte" style="display: none;">
+        <label for="otro_transporte_input">Especifique el tipo de transporte:</label>
+        <input type="text" id="otro_transporte_input" name="otro_transporte_input">
+    </div>
+    
+    <!-- Lista desplegable para Responsable -->
+    <label for="responsable">Responsable:</label>
+    <select id="responsable" name="responsable" onchange="mostrarOpcionesResponsable()" required>
+        <option value="">Seleccione una opción</option>
+        <option value="SI">Sí</option>
+        <option value="NO">No</option>
+    </select>
+    
+    <!-- Campo para ingresar código del responsable cuando se selecciona "Sí" -->
+    <div id="codigo_responsable_div" style="display: none;">
+        <label for="codigo_responsable">Ingrese el código del responsable (numérico):</label>
+        <input type="number" id="codigo_responsable" name="codigo_responsable">
+    </div>
+
+    <!-- Lista desplegable de códigos de responsables ya registrados cuando se selecciona "No" -->
+    <div id="seleccionar_codigo_div" style="display: none;">
+        <label for="seleccionar_codigo">Seleccione el código del responsable:</label>
+        <select id="seleccionar_codigo" name="seleccionar_codigo">
+            <option value="">Seleccione un código</option>
+            {% for codigo in codigos_responsables %}
+                <option value="{{ codigo }}">Responsable {{ codigo }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    
+    <!-- Botón para registrar -->
+    <button type="submit">Registrar</button>
+</form>
+
+<!-- Botón para regresar al panel principal -->
+<button onclick="window.location.href='{{ url_for('main.index') }}'">Regresar</button>
+
+<script>
+// Funciones para manejar lógica de campos dinámicos
+function actualizarMesas() {
+    const lugarVotacion = document.getElementById('lugar_votacion').value;
+    const mesaVotacion = document.getElementById('mesa_votacion');
+    mesaVotacion.innerHTML = '<option value="">Seleccione una mesa</option>'; // Reiniciar opciones
+
+    let maxMesa = 1;
+    switch (lugarVotacion) {
+        case 'Cabecera Municipal':
+            maxMesa = 21;
+            break;
+        case 'Micoahumado':
+            maxMesa = 4;
+            break;
+        case 'Bodega Central':
+        case 'El Dique':
+            maxMesa = 3;
+            break;
+        case 'La Palma':
+        case 'Boca de La Honda':
+        case 'Las Pailas':
+        case 'Corcovado':
+            maxMesa = 2;
+            break;
+        case 'La Esmeralda':
+        case 'Paredes de Ororia':
+        case 'Mina Gallo':
+            maxMesa = 1;
+            break;
+        default:
+            maxMesa = 1;
+    }
+
+    // Agregar opciones de mesa basadas en el lugar de votación seleccionado
+    for (let i = 1; i <= maxMesa; i++) {
+        const option = document.createElement('option');
+        option.value = `Mesa ${i}`;
+        option.textContent = `Mesa ${i}`;
+        mesaVotacion.appendChild(option);
+    }
+}
+
+function mostrarOtroTransporte() {
+    const tipoTransporte = document.getElementById('tipo_transporte').value;
+    const otroTransporteDiv = document.getElementById('otro_transporte');
+    
+    if (tipoTransporte === 'Otros') {
+        otroTransporteDiv.style.display = 'block';
+    } else {
+        otroTransporteDiv.style.display = 'none';
+    }
+}
+
+function mostrarOpcionesResponsable() {
+    const responsable = document.getElementById('responsable').value;
+    const codigoResponsableDiv = document.getElementById('codigo_responsable_div');
+    const seleccionarCodigoDiv = document.getElementById('seleccionar_codigo_div');
+
+    if (responsable === 'SI') {
+        codigoResponsableDiv.style.display = 'block';
+        seleccionarCodigoDiv.style.display = 'none';
+    } else if (responsable === 'NO') {
+        codigoResponsableDiv.style.display = 'none';
+        seleccionarCodigoDiv.style.display = 'block';
+    } else {
+        codigoResponsableDiv.style.display = 'none';
+        seleccionarCodigoDiv.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

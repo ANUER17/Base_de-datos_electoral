@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Estadísticas de Votación{% endblock %}
+
+{% block content %}
+<h2 style="font-family: 'Montserrat', sans-serif; text-align: center; color: #333; margin-bottom: 30px;">Estadísticas de Votación</h2>
+
+{% if estadisticas %}
+    <h3 style="text-align: center; color: #444;">Total de Votos: {{ total_votos }}</h3>
+    <div style="display: flex; justify-content: center; padding: 20px;">
+        <table style="border-collapse: collapse; width: 70%; font-family: 'Roboto', sans-serif; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+            <thead>
+                <tr style="background-color: #007BFF; color: white; font-size: 18px;">
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #ddd;">Lugar de Votación</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #ddd;">Cantidad de Votos</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set row_color = '#f4f7fb' %}
+                {% for lugar, cantidad in estadisticas.items() %}
+                <tr style="background-color: {{ row_color }}; transition: background-color 0.3s;">
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{ lugar }}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{ cantidad }}</td>
+                </tr>
+                {% set row_color = '#e1ecf4' if row_color == '#f4f7fb' else '#f4f7fb' %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Gráfico de Barras Horizontales -->
+    <div style="width: 80%; margin: 20px auto; padding: 20px; background-color: #f9f9f9; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+        <canvas id="barChart"></canvas>
+    </div>
+
+    <!-- Gráfico Circular -->
+    <div style="width: 80%; margin: 20px auto; padding: 20px; background-color: #f9f9f9; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+        <canvas id="pieChart"></canvas>
+    </div>
+
+    <!-- Scripts para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script> <!-- Plugin para mostrar etiquetas -->
+
+    <script>
+        // Datos para los gráficos
+        const labels = {{ estadisticas.keys() | list | tojson }};
+        const data = {{ estadisticas.values() | list | tojson }};
+        const totalVotos = {{ total_votos }};
+
+        // Función para calcular el porcentaje
+        function calculatePercentage(value) {
+            return ((value / totalVotos) * 100).toFixed(2) + '%';
+        }
+
+        // Gráfico de Barras Horizontales
+        const ctxBar = document.getElementById('barChart').getContext('2d');
+        new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Votos por Lugar de Votación',
+                    data: data,
+                    borderWidth: 1,
+                    backgroundColor: 'rgba(54,162,235,0.7)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    hoverBackgroundColor: 'rgba(75, 192, 192, 0.8)',
+                    barPercentage: 0.7
+                }]
+            },
+            options: {
+                plugins: {
+                    datalabels: {
+                        color: '#fff',
+                        anchor: 'center',
+                        align: 'center',
+                        formatter: (value) => calculatePercentage(value),
+                        font: {
+                            size: 12,
+                            weight: 'bold'
+                        }
+                    }
+                },
+                indexAxis: 'y',  // Barra horizontal
+                responsive: true,
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                animation: {
+                    duration: 2000,  // Animación suave
+                    easing: 'easeOutBounce'
+                },
+                legend: {
+                    display: false
+                }
+            },
+            plugins: [ChartDataLabels]  // Activar el plugin de etiquetas
+        });
+
+        // Gráfico Circular
+        const ctxPie = document.getElementById('pieChart').getContext('2d');
+        new Chart(ctxPie, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Votos por Lugar de Votación',
+                    data: data,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.7)',
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(255, 206, 86, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(153, 102, 255, 0.7)',
+                        'rgba(255, 159, 64, 0.7)',
+                        'rgba(199, 199, 199, 0.7)',
+                        'rgba(83, 102, 255, 0.7)',
+                        'rgba(104, 132, 245, 0.7)',
+                        'rgba(234, 211, 135, 0.7)',
+                        'rgba(114, 222, 104, 0.7)'
+                    ],
+                    hoverBackgroundColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)',
+                        'rgba(199, 199, 199, 1)',
+                        'rgba(83, 102, 255, 1)',
+                        'rgba(104, 132, 245, 1)',
+                        'rgba(234, 211, 135, 1)',
+                        'rgba(114, 222, 104, 1)'
+                    ],
+                    borderColor: 'rgba(255, 255, 255, 1)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                plugins: {
+                    datalabels: {
+                        color: '#fff',
+                        formatter: (value) => calculatePercentage(value),
+                        font: {
+                            size: 14
+                        }
+                    }
+                },
+                responsive: true,
+                animation: {
+                    animateScale: true,
+                    animateRotate: true,
+                    duration: 2000,  // Animación suave
+                    easing: 'easeOutCirc'
+                },
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        fontColor: '#333',
+                        fontSize: 14
+                    }
+                }
+            },
+            plugins: [ChartDataLabels]  // Activar el plugin de etiquetas
+        });
+    </script>
+
+{% else %}
+    <p>Ingrese la clave correcta para ver las estadísticas.</p>
+{% endif %}
+
+<!-- Botón para regresar al panel principal -->
+<button style="background-color: #007BFF; color: white; padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px; font-family: 'Roboto', sans-serif;" onclick="window.location.href='{{ url_for('main.index') }}'">Regresar</button>
+{% endblock %}

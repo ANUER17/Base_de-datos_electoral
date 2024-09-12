@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Base de Datos Electoral{% endblock %}</title>
+    
+    {% block head %}
+    <!-- CSS específico para cada página -->
+    {% if 'login' in request.path %}
+        <!-- CSS específico para el login -->
+        <link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}">
+    {% else %}
+        <!-- CSS principal del proyecto -->
+        <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    {% endif %}
+    {% endblock %}
+</head>
+<body>
+    <!-- Mostrar el contenedor principal si no es la página de login -->
+    {% if 'login' not in request.path %}
+    <div class="container">
+    {% endif %}
+    
+    {% block content %}
+    <!-- Aquí va el contenido específico de cada página -->
+    {% endblock %}
+    
+    <!-- Cerrar el contenedor principal si no es la página de login -->
+    {% if 'login' not in request.path %}
+    </div>
+    {% endif %}
+
+    <!-- Cargar JavaScript común si no es la página de login -->
+    {% if 'login' not in request.path %}
+    <script src="{{ url_for('static', filename='scripts.js') }}"></script>
+    <script>
+        // Mostrar mensajes de notificación del navegador
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    alert('{{ message }}');
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </script>
+    {% endif %}
+    
+    <!-- Script para manejar el botón de salir -->
+    <script>
+        function confirmarSalir() {
+            if (confirm('¿Está seguro de que desea cerrar sesión?')) {
+                window.location.href = "{{ url_for('main.logout') }}";
+            }
+        }
+    </script>
+
+    <!-- Limpiar la clave de exportación después de la descarga -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const exportForm = document.querySelector('.export-form');
+            if (exportForm) {
+                exportForm.addEventListener('submit', function() {
+                    setTimeout(function() {
+                        const claveInput = exportForm.querySelector('input[name="clave"]');
+                        if (claveInput) {
+                            claveInput.value = '';  // Limpiar la clave después de enviar el formulario
+                        }
+                    }, 1000);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

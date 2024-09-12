@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Buscar Registros</h2>
+<form method="post">
+    <label for="cedula">Número de Cédula:</label>
+    <input type="number" id="cedula" name="cedula" required>
+    <button type="submit">Buscar</button>
+</form>
+
+{% if registros %}
+    <h3>Resultados</h3>
+    <ul>
+        {% for registro in registros %}
+            <li>{{ registro }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+<!-- Botón para regresar al panel principal -->
+<button onclick="window.location.href='{{ url_for('main.index') }}'">Regresar</button>
+{% endblock %}
